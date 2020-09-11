@@ -1,0 +1,31 @@
+name: 'Your name here'
+description: 'Provide a description here'
+author: 'Your name or organization here'
+inputs:
+  organization:
+    required: true
+    description: 'CodeScan Organization Key'
+  projectKey:
+    required: true
+    description: 'CodeScan Project Key'
+  login:
+    required: true
+    description: 'CodeScan Login Key'
+  codeScanUrl:
+    required: false
+    description: 'CodeScanCloud endpoint for your project'
+    default: 'https://app.codescan.io/'
+  pollingTimeoutSec:
+    required: false
+    description: 'This task will poll CodeScanCloud until the analysis is completed, or until the timeout is reached'
+    default: '300'
+  generateSarifFile:
+    required: false
+    description: 'The flag to indicate that SARIF file should be generated'
+    default: 'true'
+  args:
+    required: false
+    description: 'Additional arguments to the sonarcloud scanner'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
