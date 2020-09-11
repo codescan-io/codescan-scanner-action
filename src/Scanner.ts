@@ -2,7 +2,7 @@ import scanner from 'sonarqube-scanner'
 import * as core from '@actions/core'
 
 export class Scanner {
-  readonly doScan = (options: object): object =>
+  readonly doScan = async (options: object): Promise<object> =>
     new Promise(resolve => scanner(options, resolve))
 
   async runAnalysis(
@@ -11,7 +11,7 @@ export class Scanner {
     options: object
   ): Promise<void> {
     core.debug(`[CS] Scanner options: ${JSON.stringify(options)}`)
-    this.doScan({
+    await this.doScan({
       serverUrl,
       token,
       options
