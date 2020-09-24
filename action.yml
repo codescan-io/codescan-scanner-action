@@ -1,5 +1,5 @@
 name: 'CodeScan Scanner'
-description: 'Use the CodeScan Scanner Action in your build/release workflow to track bugs, code smells and vulnerabilities in Salesforce languages like Apex, VisualForce, Lightning, etc'
+description: 'Use the CodeScan Scanner in your workflows to track bugs, code smells and vulnerabilities in Salesforce languages.'
 author: 'CodeScan Enterprises LLC'
 branding:
   icon: code
