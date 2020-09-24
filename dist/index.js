@@ -118,12 +118,12 @@ const sonarqube_scanner_1 = __importDefault(__webpack_require__(8731));
 const core = __importStar(__webpack_require__(2186));
 class Scanner {
     constructor() {
-        this.doScan = (options) => __awaiter(this, void 0, void 0, function* () { return new Promise(resolve => sonarqube_scanner_1.default(options, resolve)); });
+        this.doScan = (options) => new Promise(resolve => sonarqube_scanner_1.default(options, resolve));
     }
     runAnalysis(serverUrl, token, options) {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`[CS] Scanner options: ${JSON.stringify(options)}`);
-            yield this.doScan({
+            this.doScan({
                 serverUrl,
                 token,
                 options
