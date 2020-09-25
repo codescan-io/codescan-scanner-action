@@ -37,7 +37,7 @@ async function run(): Promise<void> {
       })
     }
 
-    new Scanner().runAnalysis(codeScanUrl, authToken, options)
+    await new Scanner().runAnalysis(codeScanUrl, authToken, options)
     core.debug('[CS] CodeScan Analysis completed.')
 
     const reportFiles = await TaskReport.findTaskFileReport()

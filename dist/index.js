@@ -100,6 +100,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -112,11 +121,13 @@ class Scanner {
         this.doScan = (options) => new Promise(resolve => sonarqube_scanner_1.default(options, resolve));
     }
     runAnalysis(serverUrl, token, options) {
-        core.debug(`[CS] Scanner options: ${JSON.stringify(options)}`);
-        this.doScan({
-            serverUrl,
-            token,
-            options
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`[CS] Scanner options: ${JSON.stringify(options)}`);
+            yield this.doScan({
+                serverUrl,
+                token,
+                options
+            });
         });
     }
 }
@@ -432,7 +443,7 @@ function run() {
                     'sonar.analysis.report.type': 'sarif'
                 });
             }
-            new Scanner_1.Scanner().runAnalysis(codeScanUrl, authToken, options);
+            yield new Scanner_1.Scanner().runAnalysis(codeScanUrl, authToken, options);
             core.debug('[CS] CodeScan Analysis completed.');
             const reportFiles = yield TaskReport_1.default.findTaskFileReport();
             core.debug(`[SQ] Searching for ${TaskReport_1.REPORT_TASK_NAME} - found ${reportFiles.length} file(s)`);
