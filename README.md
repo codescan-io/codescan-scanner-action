@@ -1,7 +1,7 @@
 codescan-scanner-action
 =============
 
-Run CodeScan static code analysis jobs from Github actions. The action may produce SARIF file with analysis results.
+Run CodeScan static code analysis jobs from Github workflow. The CodeScan action produces SARIF report file with analysis results.
 
 ## Input parameters for Action
 
@@ -19,7 +19,7 @@ Run CodeScan static code analysis jobs from Github actions. The action may produ
 
 ```yml
     -   name: Run Analysis
-        uses: codescan-io/codescan-scanner-action@main
+        uses: codescan-io/codescan-scanner-action@master
         with:
             login: ${{ secrets.CODESCAN_AUTH_TOKEN }}
             organization: test-org
