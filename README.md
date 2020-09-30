@@ -11,7 +11,7 @@ Run CodeScan static code analysis jobs from Github workflow. The CodeScan action
 | projectKey | **required** | Project Key |
 | login | **required** | Security authentication key for the user having scan access for the project |
 | codeScanUrl | https://app.codescan.io/ | CodeScanCloud endpoint for your project |
-| pollingTimeoutSec | 300 | Timeout to wait for Post-Analysis report generation is completed (in seconds) |
+| pollingTimeoutSec | 900 | Timeout to wait for Post-Analysis report generation is completed (in seconds) |
 | generateSarifFile | true | The flag to indicate that SARIF file should be generated. |
 | args | | Optional parameters passed to CodeScan analyzer |
 
