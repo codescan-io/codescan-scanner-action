@@ -408,15 +408,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(2186));
 const Scanner_1 = __webpack_require__(9660);
 const TaskReport_1 = __importStar(__webpack_require__(1592));
-const Request_1 = __importDefault(__webpack_require__(7457));
-const fs = __importStar(__webpack_require__(5747));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -439,8 +434,8 @@ function run() {
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             if (generateSarifFile) {
                 Object.assign(options, {
-                    'sonar.analysis.report.enabled': 'true',
-                    'sonar.analysis.report.type': 'sarif'
+                    'codescan.reports.enabled': 'true',
+                    'codescan.reports.types': 'sarif'
                 });
             }
             yield new Scanner_1.Scanner().runAnalysis(codeScanUrl, authToken, options);
@@ -450,25 +445,6 @@ function run() {
             const taskReports = yield TaskReport_1.default.createTaskReportsFromFiles(reportFiles);
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
-            if (generateSarifFile) {
-                // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
-                yield Promise.all(tasks.map(task => {
-                    core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
-                    new Request_1.default()
-                        .get(codeScanUrl, authToken, `/_codescan/analysis/reports/${task.id}`, false, {
-                        format: 'sarif',
-                        projectKey: core.getInput('projectKey')
-                    })
-                        .then(data => {
-                        fs.writeFile('codescan.sarif', data, () => {
-                            core.debug('[CS] The SARIF file with CodeScan analysis results has been saved');
-                        });
-                    });
-                }));
-            }
-            else {
-                core.debug('[CS] Generation of SARIF file is disabled.');
-            }
         }
         catch (error) {
             core.setFailed(error.message);
@@ -65380,7 +65356,7 @@ module.exports = JSON.parse("{\"$schema\":\"http://json-schema.org/draft-07/sche
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse("{\"_from\":\"got@^8.3.1\",\"_id\":\"got@8.3.2\",\"_inBundle\":false,\"_integrity\":\"sha512-qjUJ5U/hawxosMryILofZCkm3C84PLJS/0grRIpjAwu+Lkxxj5cxeCU25BG0/3mDSpXKTyZr8oh8wIgLaH0QCw==\",\"_location\":\"/got\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"range\",\"registry\":true,\"raw\":\"got@^8.3.1\",\"name\":\"got\",\"escapedName\":\"got\",\"rawSpec\":\"^8.3.1\",\"saveSpec\":null,\"fetchSpec\":\"^8.3.1\"},\"_requiredBy\":[\"/download\"],\"_resolved\":\"https://registry.npmjs.org/got/-/got-8.3.2.tgz\",\"_shasum\":\"1d23f64390e97f776cac52e5b936e5f514d2e937\",\"_spec\":\"got@^8.3.1\",\"_where\":\"C:\\\\CodeScan\\\\codescan-scanner-action\\\\node_modules\\\\download\",\"ava\":{\"concurrency\":4},\"browser\":{\"decompress-response\":false,\"electron\":false},\"bugs\":{\"url\":\"https://github.com/sindresorhus/got/issues\"},\"bundleDependencies\":false,\"dependencies\":{\"@sindresorhus/is\":\"^0.7.0\",\"cacheable-request\":\"^2.1.1\",\"decompress-response\":\"^3.3.0\",\"duplexer3\":\"^0.1.4\",\"get-stream\":\"^3.0.0\",\"into-stream\":\"^3.1.0\",\"is-retry-allowed\":\"^1.1.0\",\"isurl\":\"^1.0.0-alpha5\",\"lowercase-keys\":\"^1.0.0\",\"mimic-response\":\"^1.0.0\",\"p-cancelable\":\"^0.4.0\",\"p-timeout\":\"^2.0.1\",\"pify\":\"^3.0.0\",\"safe-buffer\":\"^5.1.1\",\"timed-out\":\"^4.0.1\",\"url-parse-lax\":\"^3.0.0\",\"url-to-options\":\"^1.0.1\"},\"deprecated\":false,\"description\":\"Simplified HTTP requests\",\"devDependencies\":{\"ava\":\"^0.25.0\",\"coveralls\":\"^3.0.0\",\"form-data\":\"^2.1.1\",\"get-port\":\"^3.0.0\",\"nyc\":\"^11.0.2\",\"p-event\":\"^1.3.0\",\"pem\":\"^1.4.4\",\"proxyquire\":\"^1.8.0\",\"sinon\":\"^4.0.0\",\"slow-stream\":\"0.0.4\",\"tempfile\":\"^2.0.0\",\"tempy\":\"^0.2.1\",\"universal-url\":\"1.0.0-alpha\",\"xo\":\"^0.20.0\"},\"engines\":{\"node\":\">=4\"},\"files\":[\"index.js\",\"errors.js\"],\"homepage\":\"https://github.com/sindresorhus/got#readme\",\"keywords\":[\"http\",\"https\",\"get\",\"got\",\"url\",\"uri\",\"request\",\"util\",\"utility\",\"simple\",\"curl\",\"wget\",\"fetch\",\"net\",\"network\",\"electron\"],\"license\":\"MIT\",\"maintainers\":[{\"name\":\"Sindre Sorhus\",\"email\":\"sindresorhus@gmail.com\",\"url\":\"sindresorhus.com\"},{\"name\":\"Vsevolod Strukchinsky\",\"email\":\"floatdrop@gmail.com\",\"url\":\"github.com/floatdrop\"},{\"name\":\"Alexander Tesfamichael\",\"email\":\"alex.tesfamichael@gmail.com\",\"url\":\"alextes.me\"}],\"name\":\"got\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/sindresorhus/got.git\"},\"scripts\":{\"coveralls\":\"nyc report --reporter=text-lcov | coveralls\",\"test\":\"xo && nyc ava\"},\"version\":\"8.3.2\"}");
+module.exports = JSON.parse("{\"name\":\"got\",\"version\":\"8.3.2\",\"description\":\"Simplified HTTP requests\",\"license\":\"MIT\",\"repository\":\"sindresorhus/got\",\"maintainers\":[{\"name\":\"Sindre Sorhus\",\"email\":\"sindresorhus@gmail.com\",\"url\":\"sindresorhus.com\"},{\"name\":\"Vsevolod Strukchinsky\",\"email\":\"floatdrop@gmail.com\",\"url\":\"github.com/floatdrop\"},{\"name\":\"Alexander Tesfamichael\",\"email\":\"alex.tesfamichael@gmail.com\",\"url\":\"alextes.me\"}],\"engines\":{\"node\":\">=4\"},\"scripts\":{\"test\":\"xo && nyc ava\",\"coveralls\":\"nyc report --reporter=text-lcov | coveralls\"},\"files\":[\"index.js\",\"errors.js\"],\"keywords\":[\"http\",\"https\",\"get\",\"got\",\"url\",\"uri\",\"request\",\"util\",\"utility\",\"simple\",\"curl\",\"wget\",\"fetch\",\"net\",\"network\",\"electron\"],\"dependencies\":{\"@sindresorhus/is\":\"^0.7.0\",\"cacheable-request\":\"^2.1.1\",\"decompress-response\":\"^3.3.0\",\"duplexer3\":\"^0.1.4\",\"get-stream\":\"^3.0.0\",\"into-stream\":\"^3.1.0\",\"is-retry-allowed\":\"^1.1.0\",\"isurl\":\"^1.0.0-alpha5\",\"lowercase-keys\":\"^1.0.0\",\"mimic-response\":\"^1.0.0\",\"p-cancelable\":\"^0.4.0\",\"p-timeout\":\"^2.0.1\",\"pify\":\"^3.0.0\",\"safe-buffer\":\"^5.1.1\",\"timed-out\":\"^4.0.1\",\"url-parse-lax\":\"^3.0.0\",\"url-to-options\":\"^1.0.1\"},\"devDependencies\":{\"ava\":\"^0.25.0\",\"coveralls\":\"^3.0.0\",\"form-data\":\"^2.1.1\",\"get-port\":\"^3.0.0\",\"nyc\":\"^11.0.2\",\"p-event\":\"^1.3.0\",\"pem\":\"^1.4.4\",\"proxyquire\":\"^1.8.0\",\"sinon\":\"^4.0.0\",\"slow-stream\":\"0.0.4\",\"tempfile\":\"^2.0.0\",\"tempy\":\"^0.2.1\",\"universal-url\":\"1.0.0-alpha\",\"xo\":\"^0.20.0\"},\"ava\":{\"concurrency\":4},\"browser\":{\"decompress-response\":false,\"electron\":false}}");
 
 /***/ }),
 
@@ -65572,7 +65548,7 @@ module.exports = JSON.parse("{\"assert\":true,\"async_hooks\":\">= 8\",\"buffer_
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse("{\"_from\":\"seek-bzip@^1.0.5\",\"_id\":\"seek-bzip@1.0.6\",\"_inBundle\":false,\"_integrity\":\"sha512-e1QtP3YL5tWww8uKaOCQ18UxIT2laNBXHjV/S2WYCiK4udiv8lkG89KRIoCjUagnAmCBurjF4zEVX2ByBbnCjQ==\",\"_location\":\"/seek-bzip\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"range\",\"registry\":true,\"raw\":\"seek-bzip@^1.0.5\",\"name\":\"seek-bzip\",\"escapedName\":\"seek-bzip\",\"rawSpec\":\"^1.0.5\",\"saveSpec\":null,\"fetchSpec\":\"^1.0.5\"},\"_requiredBy\":[\"/decompress-tarbz2\"],\"_resolved\":\"https://registry.npmjs.org/seek-bzip/-/seek-bzip-1.0.6.tgz\",\"_shasum\":\"35c4171f55a680916b52a07859ecf3b5857f21c4\",\"_spec\":\"seek-bzip@^1.0.5\",\"_where\":\"C:\\\\CodeScan\\\\codescan-scanner-action\\\\node_modules\\\\decompress-tarbz2\",\"bin\":{\"seek-bunzip\":\"bin/seek-bunzip\",\"seek-table\":\"bin/seek-bzip-table\"},\"bugs\":{\"url\":\"https://github.com/cscott/seek-bzip/issues\"},\"bundleDependencies\":false,\"contributors\":[{\"name\":\"C. Scott Ananian\",\"url\":\"http://cscott.net\"},{\"name\":\"Eli Skeggs\"},{\"name\":\"Kevin Kwok\"},{\"name\":\"Rob Landley\",\"url\":\"http://landley.net\"}],\"dependencies\":{\"commander\":\"^2.8.1\"},\"deprecated\":false,\"description\":\"a pure-JavaScript Node.JS module for random-access decoding bzip2 data\",\"devDependencies\":{\"fibers\":\"~1.0.6\",\"mocha\":\"~2.2.5\"},\"directories\":{\"test\":\"test\"},\"homepage\":\"https://github.com/cscott/seek-bzip#readme\",\"license\":\"MIT\",\"main\":\"./lib/index.js\",\"name\":\"seek-bzip\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/cscott/seek-bzip.git\"},\"scripts\":{\"test\":\"mocha\"},\"version\":\"1.0.6\"}");
+module.exports = JSON.parse("{\"name\":\"seek-bzip\",\"version\":\"1.0.6\",\"contributors\":[\"C. Scott Ananian (http://cscott.net)\",\"Eli Skeggs\",\"Kevin Kwok\",\"Rob Landley (http://landley.net)\"],\"description\":\"a pure-JavaScript Node.JS module for random-access decoding bzip2 data\",\"main\":\"./lib/index.js\",\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/cscott/seek-bzip.git\"},\"license\":\"MIT\",\"bin\":{\"seek-bunzip\":\"./bin/seek-bunzip\",\"seek-table\":\"./bin/seek-bzip-table\"},\"directories\":{\"test\":\"test\"},\"dependencies\":{\"commander\":\"^2.8.1\"},\"devDependencies\":{\"fibers\":\"~1.0.6\",\"mocha\":\"~2.2.5\"},\"scripts\":{\"test\":\"mocha\"}}");
 
 /***/ }),
 

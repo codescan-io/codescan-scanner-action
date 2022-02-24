@@ -40,7 +40,7 @@ As a next Workflow step you have to upload SARIF file:
     -   name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v1
         with:
-            sarif_file: codescan.sarif
+            sarif_file: codescan-sarif.json
 ```
 
 When SARIF file is uploaded, you can view, fix, and close alerts for potential vulnerabilities or errors in your project's code.

@@ -1,8 +1,6 @@
 import * as core from '@actions/core'
 import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
-import Request from './Request'
-import * as fs from 'fs'
 
 async function run(): Promise<void> {
   try {
@@ -32,8 +30,8 @@ async function run(): Promise<void> {
 
     if (generateSarifFile) {
       Object.assign(options, {
-        'sonar.analysis.report.enabled': 'true',
-        'sonar.analysis.report.type': 'sarif'
+        'codescan.reports.enabled': 'true',
+        'codescan.reports.types': 'sarif'
       })
     }
 
@@ -58,34 +56,6 @@ async function run(): Promise<void> {
     )
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
-    if (generateSarifFile) {
-      // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
-      await Promise.all(
-        tasks.map(task => {
-          core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
-          new Request()
-            .get(
-              codeScanUrl,
-              authToken,
-              `/_codescan/analysis/reports/${task.id}`,
-              false,
-              {
-                format: 'sarif',
-                projectKey: core.getInput('projectKey')
-              }
-            )
-            .then(data => {
-              fs.writeFile('codescan.sarif', data, () => {
-                core.debug(
-                  '[CS] The SARIF file with CodeScan analysis results has been saved'
-                )
-              })
-            })
-        })
-      )
-    } else {
-      core.debug('[CS] Generation of SARIF file is disabled.')
-    }
   } catch (error) {
     core.setFailed(error.message)
   }
