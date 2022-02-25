@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import {Scanner} from './Scanner'
-import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 
 async function run(): Promise<void> {
   try {
@@ -25,7 +24,6 @@ async function run(): Promise<void> {
 
     const codeScanUrl = core.getInput('codeScanUrl')
     const authToken = core.getInput('login')
-    const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
 
     if (generateSarifFile) {
@@ -37,25 +35,6 @@ async function run(): Promise<void> {
 
     await new Scanner().runAnalysis(codeScanUrl, authToken, options)
     core.debug('[CS] CodeScan Analysis completed.')
-
-    const reportFiles = await TaskReport.findTaskFileReport()
-    core.debug(
-      `[SQ] Searching for ${REPORT_TASK_NAME} - found ${reportFiles.length} file(s)`
-    )
-
-    const taskReports = await TaskReport.createTaskReportsFromFiles(reportFiles)
-    const tasks = await Promise.all(
-      taskReports.map(taskReport =>
-        TaskReport.getReportForTask(
-          taskReport,
-          codeScanUrl,
-          authToken,
-          timeoutSec
-        )
-      )
-    )
-    core.debug('[CS] CodeScan Report Tasks execution completed.')
-
   } catch (error) {
     core.setFailed(error.message)
   }
