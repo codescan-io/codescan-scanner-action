@@ -29,11 +29,17 @@ async function run(): Promise<void> {
     const authToken = core.getInput('login')
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
+    const generateReportFile = core.getInput('generateReportFile') === 'true'
 
     if (generateSarifFile) {
       Object.assign(options, {
         'sonar.analysis.report.enabled': 'true',
         'sonar.analysis.report.type': 'sarif'
+      })
+    } else if (generateReportFile) {
+      Object.assign(options, {
+        'codescan.reports.enabled': 'true',
+        'codescan.reports.types': 'sarif'
       })
     }
 

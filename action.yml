@@ -24,7 +24,11 @@ inputs:
     default: '900'
   generateSarifFile:
     required: false
-    description: 'The flag to indicate that SARIF file should be generated'
+    description: 'The flag to indicate that SARIF file should be generated on server side'
+    default: 'false'
+  generateReportFile:
+    required: false
+    description: 'The flag to indicate that SARIF file should be generated on client side'
     default: 'true'
   args:
     required: false

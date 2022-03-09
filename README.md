@@ -12,7 +12,8 @@ Run CodeScan static code analysis jobs from Github workflow. The CodeScan action
 | login | **required** | Security authentication key for the user having scan access for the project |
 | codeScanUrl | https://app.codescan.io/ | CodeScanCloud endpoint for your project |
 | pollingTimeoutSec | 900 | Timeout to wait for Post-Analysis report generation is completed (in seconds) |
-| generateSarifFile | true | The flag to indicate that SARIF file should be generated. |
+| generateReportFile | true | The flag to indicate that SARIF file should be generated on client side. |
+| generateSarifFile | false | The flag to indicate that SARIF file should be generated on server side. |
 | args | | Optional parameters passed to CodeScan analyzer |
 
 ## Example of using Action in Github Workflow
@@ -31,8 +32,11 @@ Run CodeScan static code analysis jobs from Github workflow. The CodeScan action
 
 ## SARIF file output
 
-Be default the Action will generate SARIF report file.
-You can disable this feature via `generateSarifFile` input parameter.
+By default the Action will generate SARIF report file on client side.
+You can disable this feature via `generateReportFile` input parameter.
+
+SARIF report file can also generated on server side.
+This feature can be enabled via `generateSarifFile` input parameter.
 
 As a next Workflow step you have to upload SARIF file:
 
