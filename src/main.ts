@@ -3,6 +3,7 @@ import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 import Request from './Request'
 import * as fs from 'fs'
+const request = require('request');
 
 async function run(): Promise<void> {
   try {
@@ -30,6 +31,8 @@ async function run(): Promise<void> {
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
+    const failPipeWhenRedQualityGate = true
+    const qgurl = ''
 
     if (generateSarifFile) {
       Object.assign(options, {
@@ -69,6 +72,7 @@ async function run(): Promise<void> {
       await Promise.all(
         tasks.map(task => {
           core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
+          qgurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`
           new Request()
             .get(
               codeScanUrl,
@@ -91,6 +95,25 @@ async function run(): Promise<void> {
       )
     } else {
       core.debug('[CS] Generation of SARIF file is disabled.')
+    }
+    if (failPipeWhenRedQualityGate) {
+        if (!qgurl) {
+            reject('qualityGate url not found');
+        } else {
+            // fetch quality gate...
+            request({url: qgurl, authToken}, (error, response, body) => {
+              if (error) {
+                return reject(error);
+              }
+              const json = JSON.parse(body);
+              if (json.errors) {
+                reject(json.errors[0].msg);
+              } else if (json.projectStatus.staus === 'ERROR') {
+                reject("Pipeline failed with red quality gate");
+              }
+              resolve(json.projectStatus);
+            });
+        }
     }
   } catch (error) {
     core.setFailed(error.message)
