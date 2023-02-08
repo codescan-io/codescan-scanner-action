@@ -3,6 +3,7 @@ import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 import Request from './Request'
 import * as fs from 'fs'
+import * as Path from 'path';
 const request = require('request');
 
 async function run(): Promise<void> {
@@ -72,7 +73,7 @@ async function run(): Promise<void> {
       await Promise.all(
         tasks.map(task => {
           core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
-          qgurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`
+          const qgurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`
           new Request()
             .get(
               codeScanUrl,
@@ -98,24 +99,24 @@ async function run(): Promise<void> {
     }
     if (failPipeWhenRedQualityGate) {
         if (!qgurl) {
-            reject('qualityGate url not found');
+            Promise.reject('qualityGate url not found');
         } else {
             // fetch quality gate...
-            request({url: qgurl, authToken}, (error, response, body) => {
+            request({url: qgurl, authToken}, (error: any, response: any, body: string) => {
               if (error) {
-                return reject(error);
+                return Promise.reject(error);
               }
               const json = JSON.parse(body);
               if (json.errors) {
-                reject(json.errors[0].msg);
+                Promise.reject(json.errors[0].msg);
               } else if (json.projectStatus.staus === 'ERROR') {
-                reject("Pipeline failed with red quality gate");
+                Promise.reject("Pipeline failed with red quality gate");
               }
-              resolve(json.projectStatus);
+              Promise.resolve(json.projectStatus);
             });
         }
     }
-  } catch (error) {
+  } catch (error: any) {
     core.setFailed(error.message)
   }
 }
