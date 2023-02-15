@@ -3,9 +3,11 @@ import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 import Request from './Request'
 import * as fs from 'fs'
+const log = require('@actions/core');
 
 async function run(): Promise<void> {
   core.info('Checking for log messages')
+  log.info('Checking for log messages using require')
   try {
     core.debug('[CS] Run CodeScan Analysis')
     const args = core
