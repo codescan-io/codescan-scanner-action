@@ -8,7 +8,7 @@ const log = require('@actions/core');
 async function run(): Promise<void> {
   core.info('Checking for log messages')
   log.info('Checking for log messages using require')
-  try {
+  try 
     core.debug('[CS] Run CodeScan Analysis')
     const args = core
       .getInput('args')
