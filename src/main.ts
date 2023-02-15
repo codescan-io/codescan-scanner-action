@@ -5,6 +5,7 @@ import Request from './Request'
 import * as fs from 'fs'
 
 async function run(): Promise<void> {
+  core.info('Checking for log messages')
   try {
     core.debug('[CS] Run CodeScan Analysis')
     const args = core
