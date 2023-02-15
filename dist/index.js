@@ -421,7 +421,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.debug('[CS] Run CodeScan Analysis');
-            core.debug('[CS] Run CodeScan Analysis lol');
+            core.info('[CS] Run CodeScan Analysis lol');
             const args = core
                 .getInput('args')
                 .split('\n')
