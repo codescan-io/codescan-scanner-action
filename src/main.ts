@@ -101,9 +101,7 @@ async function run(): Promise<void> {
     }
     if (failPipeWhenRedQualityGate) {
       // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
-      await Promise.all(
-        tasks.map(task => {
-          core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
+      
           const key = core.getInput('projectKey')
           const gateurl=`${codeScanUrl}api/qualitygates/project_status?projectKey=${key}`
           core.info('Quality gate url: ${gateurl}')
@@ -129,8 +127,7 @@ async function run(): Promise<void> {
                 Promise.resolve(json.projectStatus);
               });
           }
-        })
-      )
+        
     }
     
   } catch (error: any) {
