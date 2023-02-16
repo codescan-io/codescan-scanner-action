@@ -485,7 +485,7 @@ function run() {
                 // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
                 yield Promise.all(tasks.map(task => {
                     core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
-                    const gateurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`;
+                    const gateurl = `${codeScanUrl}api/qualitygates/project_status?analysisId=${task.id}`;
                     core.info('Quality gate url: ${gateurl}');
                     core.info(gateurl);
                     if (!gateurl) {
