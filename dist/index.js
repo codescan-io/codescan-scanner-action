@@ -506,7 +506,7 @@ function run() {
                             return Promise.reject(error);
                         }
                         core.info(body);
-                        const json = JSON.parse(body);
+                        const json = JSON.parse(response);
                         console.log(json);
                         console.log(json.projectStatus.status);
                         if (json.errors) {
