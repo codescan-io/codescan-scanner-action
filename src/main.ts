@@ -117,6 +117,7 @@ async function run(): Promise<void> {
                 if (error) {
                   return Promise.reject(error);
                 }
+                core.info(body)
                 const json = JSON.parse(body);
                 console.log(json);
                 console.log(json.projectStatus.status);
