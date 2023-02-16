@@ -462,12 +462,10 @@ function run() {
             const taskReports = yield TaskReport_1.default.createTaskReportsFromFiles(reportFiles);
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
-            var gateurl = "";
             if (generateSarifFile) {
                 // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
                 yield Promise.all(tasks.map(task => {
                     core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
-                    gateurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`;
                     new Request_1.default()
                         .get(codeScanUrl, authToken, `/_codescan/analysis/reports/${task.id}`, false, {
                         format: 'sarif',
@@ -484,30 +482,35 @@ function run() {
                 core.debug('[CS] Generation of SARIF file is disabled.');
             }
             if (failPipeWhenRedQualityGate) {
-                console.log('Quality gate started.');
-                //const qgurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`
-                if (!gateurl) {
-                    Promise.reject('qualityGate url not found');
-                }
-                else {
-                    // fetch quality gate...
-                    request({ url: gateurl, authToken }, (error, response, body) => {
-                        core.info(error);
-                        if (error) {
-                            return Promise.reject(error);
-                        }
-                        const json = JSON.parse(body);
-                        console.log(json);
-                        console.log(json.projectStatus.status);
-                        if (json.errors) {
-                            Promise.reject(json.errors[0].msg);
-                        }
-                        else if (json.projectStatus.status === 'ERROR') {
-                            Promise.reject("Pipeline failed with red quality gate");
-                        }
-                        Promise.resolve(json.projectStatus);
-                    });
-                }
+                // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
+                yield Promise.all(tasks.map(task => {
+                    core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
+                    const gateurl = `${codeScanUrl}/api/qualitygates/project_status?analysisId=${task.id}`;
+                    core.info('Quality gate url: ${gateurl}');
+                    core.info(gateurl);
+                    if (!gateurl) {
+                        Promise.reject('qualityGate url not found');
+                    }
+                    else {
+                        // fetch quality gate...
+                        request({ url: gateurl, authToken }, (error, response, body) => {
+                            core.info(error);
+                            if (error) {
+                                return Promise.reject(error);
+                            }
+                            const json = JSON.parse(body);
+                            console.log(json);
+                            console.log(json.projectStatus.status);
+                            if (json.errors) {
+                                Promise.reject(json.errors[0].msg);
+                            }
+                            else if (json.projectStatus.status === 'ERROR') {
+                                Promise.reject("Pipeline failed with red quality gate");
+                            }
+                            Promise.resolve(json.projectStatus);
+                        });
+                    }
+                }));
             }
         }
         catch (error) {
