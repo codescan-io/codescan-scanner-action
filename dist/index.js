@@ -502,11 +502,14 @@ function run() {
                         core.info('----response--');
                         core.info(response);
                         core.info('------');
+                        core.info('----response status--');
+                        core.info(response.Status);
+                        core.info('------');
                         if (error) {
                             return Promise.reject(error);
                         }
                         core.info(body);
-                        const json = JSON.parse(response);
+                        const json = JSON.parse(body);
                         console.log(json);
                         console.log(json.projectStatus.status);
                         if (json.errors) {
