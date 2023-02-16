@@ -493,7 +493,15 @@ function run() {
                 else {
                     // fetch quality gate...
                     request({ url: gateurl, authToken }, (error, response, body) => {
+                        core.info('----error--');
                         core.info(error);
+                        core.info('------');
+                        core.info('----body--');
+                        core.info(body);
+                        core.info('------');
+                        core.info('----response--');
+                        core.info(response);
+                        core.info('------');
                         if (error) {
                             return Promise.reject(error);
                         }
