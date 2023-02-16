@@ -104,8 +104,8 @@ async function run(): Promise<void> {
       await Promise.all(
         tasks.map(task => {
           core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
-          
-          const gateurl=`${codeScanUrl}api/qualitygates/project_status?analysisId=${task.id}`
+          const key = core.getInput('projectKey')
+          const gateurl=`${codeScanUrl}api/qualitygates/project_status?projectKey=${key}`
           core.info('Quality gate url: ${gateurl}')
           core.info(gateurl)
           if (!gateurl) {
