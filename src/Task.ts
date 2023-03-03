@@ -29,6 +29,10 @@ export default class Task {
   get id(): string {
     return this.task.id
   }
+  
+  get status(): string {
+    return this.task.status
+  }
 
   static async waitForTaskCompletion(
     codeScanUrl: string,
