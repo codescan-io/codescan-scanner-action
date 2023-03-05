@@ -183,6 +183,9 @@ class Task {
     get id() {
         return this.task.id;
     }
+    get status() {
+        return this.task.status;
+    }
     static waitForTaskCompletion(codeScanUrl, authToken, taskId, tries, delay = 1000) {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`[CS] Waiting for task '${taskId}' to complete.`);
@@ -457,6 +460,11 @@ function run() {
             const taskReports = yield TaskReport_1.default.createTaskReportsFromFiles(reportFiles);
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
+            tasks.forEach(task => {
+                if (task.status !== "SUCCESS") {
+                    core.setFailed("Failed Quality Gate");
+                }
+            });
             if (generateSarifFile) {
                 // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
                 yield Promise.all(tasks.map(task => {

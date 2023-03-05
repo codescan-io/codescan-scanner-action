@@ -64,6 +64,12 @@ async function run(): Promise<void> {
     )
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
+    tasks.forEach (task => {
+        if (task.status !== "SUCCESS") {
+            core.setFailed("Failed Quality Gate")
+        }
+    })
+
     if (generateSarifFile) {
       // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
       await Promise.all(
