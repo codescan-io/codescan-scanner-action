@@ -14,6 +14,7 @@ Run CodeScan static code analysis jobs from Github workflow. The CodeScan action
 | pollingTimeoutSec | 900 | Timeout to wait for Post-Analysis report generation is completed (in seconds) |
 | generateReportFile | true | The flag to indicate that SARIF file should be generated on client side. |
 | generateSarifFile | false | The flag to indicate that SARIF file should be generated on server side. |
+| failOnRedQualityGate | false | The flag to indicate that pipeline will fail in case of quality gate status failed. |
 | args | | Optional parameters passed to CodeScan analyzer |
 
 ## Example of using Action in Github Workflow
