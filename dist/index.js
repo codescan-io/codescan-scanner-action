@@ -183,6 +183,9 @@ class Task {
     get id() {
         return this.task.id;
     }
+    get analysisId() {
+        return this.task.analysisId;
+    }
     static waitForTaskCompletion(codeScanUrl, authToken, taskId, tries, delay = 1000) {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug(`[CS] Waiting for task '${taskId}' to complete.`);
@@ -439,7 +442,6 @@ function run() {
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             const generateReportFile = core.getInput('generateReportFile') === 'true';
             const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true';
-            const pullrequestKey = args[2];
             if (generateSarifFile) {
                 Object.assign(options, {
                     'sonar.analysis.report.enabled': 'true',
@@ -478,16 +480,15 @@ function run() {
             else {
                 core.debug('[CS] Generation of SARIF file is disabled.');
             }
+            var analysisId = '';
+            tasks.forEach(task => analysisId = task.analysisId);
+            core.info('analysis id is:' + analysisId);
             if (failPipeWhenRedQualityGate) {
                 const key = core.getInput('projectKey');
                 // fetch quality gate...
                 core.info('Quality gate api call');
-                var qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}`;
+                var qualityGateUrl = `/api/qualitygates/project_status?analysisId=${analysisId}`;
                 core.info('Quality gate url:' + qualityGateUrl);
-                if (pullrequestKey) {
-                    qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}&pullRequest=${pullrequestKey}`;
-                    core.info('Quality gate url for PR:' + qualityGateUrl);
-                }
                 new Request_1.default()
                     .get(codeScanUrl, authToken, qualityGateUrl, false)
                     .then(data => {
