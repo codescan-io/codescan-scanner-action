@@ -461,7 +461,10 @@ function run() {
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
             tasks.forEach(task => {
+                core.info("Executing task for quality gate analysis");
+                core.info(task.status);
                 if (task.status !== "SUCCESS") {
+                    core.info("Quality gate failed");
                     core.setFailed("Failed Quality Gate");
                 }
             });

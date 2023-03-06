@@ -65,7 +65,10 @@ async function run(): Promise<void> {
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
     tasks.forEach (task => {
+        core.info("Executing task for quality gate analysis")
+        core.info(task.status)
         if (task.status !== "SUCCESS") {
+            core.info("Quality gate failed")
             core.setFailed("Failed Quality Gate")
         }
     })
