@@ -33,6 +33,10 @@ inputs:
   args:
     required: false
     description: 'Additional arguments to the sonarcloud scanner'
+  failOnRedQualityGate:
+    required: false
+    description: 'The flag to indicate that pipe line will fail incase of quality gate status failed'
+    default: 'false'
 runs:
   using: 'node12'
   main: 'dist/index.js'
