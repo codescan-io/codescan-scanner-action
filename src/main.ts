@@ -30,6 +30,7 @@ async function run(): Promise<void> {
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
+    const failOnRedQualityGate = core.getInput('failOnRedQualityGate') === 'true'
 
     if (generateSarifFile) {
       Object.assign(options, {
@@ -92,8 +93,29 @@ async function run(): Promise<void> {
     } else {
       core.debug('[CS] Generation of SARIF file is disabled.')
     }
-  } catch (error) {
-    core.setFailed(error.message)
+
+    
+    if (failOnRedQualityGate) {
+      core.debug('Fetching Quality Gate results')
+      const analysisId = tasks[0].analysisId;
+      new Request()
+          .get(
+            codeScanUrl,
+            authToken,
+            `/api/qualitygates/project_status?analysisId=${analysisId}`,
+            false
+          )
+          .then(data => {
+            const json = JSON.parse(data);
+            core.debug(`Quality Gate status: ${json.projectStatus.status}`)
+            if (json.errors || json.projectStatus.status !== 'OK') {
+              core.setFailed("Failed Quality Gate")
+            }
+          })
+    }
+
+  } catch (error: any) {
+     core.setFailed(error.message)
   }
 }
 

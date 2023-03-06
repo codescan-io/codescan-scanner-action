@@ -30,6 +30,10 @@ inputs:
     required: false
     description: 'The flag to indicate that SARIF file should be generated on client side'
     default: 'true'
+  failOnRedQualityGate:
+    required: false
+    description: 'The flag to indicate that pipeline will fail in case of quality gate status failed'
+    default: 'false'
   args:
     required: false
     description: 'Additional arguments to the sonarcloud scanner'

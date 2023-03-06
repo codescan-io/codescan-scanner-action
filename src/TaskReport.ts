@@ -108,7 +108,7 @@ export default class TaskReport {
             serverUrl: settings.get('serverUrl')
           })
           return Promise.resolve(taskReport)
-        } catch (err) {
+        } catch (err: any) {
           if (err && err.message) {
             core.error(`[CS] Parse Task report error: ${err.message}`)
           } else if (err) {
