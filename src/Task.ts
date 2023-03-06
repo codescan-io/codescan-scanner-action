@@ -33,6 +33,7 @@ export default class Task {
   get analysisId(): string {
     return this.task.analysisId
   }
+
   static async waitForTaskCompletion(
     codeScanUrl: string,
     authToken: string,

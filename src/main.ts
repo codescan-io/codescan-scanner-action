@@ -24,7 +24,7 @@ async function run(): Promise<void> {
       'sonar.organization': core.getInput('organization'),
       'sonar.projectKey': core.getInput('projectKey')
     }
-    
+
     const codeScanUrl = core.getInput('codeScanUrl')
     const authToken = core.getInput('login')
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
@@ -96,17 +96,8 @@ async function run(): Promise<void> {
 
     
     if (failOnRedQualityGate) {
-
-      const key = core.getInput('projectKey')
-
-      var analysisId = ''
-      tasks.forEach (task => 
-        analysisId = task.analysisId
-      )
-      
-      // fetch quality gate...
-      core.info('Fetching Quality Gate')
-      
+      core.debug('Fetching Quality Gate results')
+      const analysisId = tasks[0].analysisId;
       new Request()
           .get(
             codeScanUrl,
@@ -116,10 +107,8 @@ async function run(): Promise<void> {
           )
           .then(data => {
             const json = JSON.parse(data);
-            core.info('Quality Gate status: '+json.projectStatus.status)
-            if (json.errors) {
-              core.setFailed("Failed Quality Gate")
-            } else if (json.projectStatus.status !== 'OK') {
+            core.debug('Quality Gate status: ' + json.projectStatus.status)
+            if (json.errors || json.projectStatus.status !== 'OK') {
               core.setFailed("Failed Quality Gate")
             }
           })
