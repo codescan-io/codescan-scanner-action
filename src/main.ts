@@ -122,9 +122,14 @@ async function run(): Promise<void> {
                       false
                     )
                     .then(data => {
-                      core.info('----project status--')
                       const json = JSON.parse(data);
+                      core.info('----Quality Gate status--')
                       core.info(json.projectStatus.status)
+                      if (json.errors) {
+                        core.setFailed("Failed Quality Gate")
+                      } else if (json.projectStatus.status !== 'SUCCESS') {
+                        core.setFailed("Failed Quality Gate")
+                      }
                     })
                 /* request({url: gateurl, authToken}, (error: any, response: any, body: string) => {
                   core.info('----error--')
