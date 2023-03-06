@@ -441,7 +441,7 @@ function run() {
             const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10);
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             const generateReportFile = core.getInput('generateReportFile') === 'true';
-            const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true';
+            const failOnRedQualityGate = core.getInput('failOnRedQualityGate') === 'true';
             if (generateSarifFile) {
                 Object.assign(options, {
                     'sonar.analysis.report.enabled': 'true',
@@ -480,17 +480,14 @@ function run() {
             else {
                 core.debug('[CS] Generation of SARIF file is disabled.');
             }
-            var analysisId = '';
-            tasks.forEach(task => analysisId = task.analysisId);
-            core.info('analysis id is:' + analysisId);
-            if (failPipeWhenRedQualityGate) {
+            if (failOnRedQualityGate) {
                 const key = core.getInput('projectKey');
+                var analysisId = '';
+                tasks.forEach(task => analysisId = task.analysisId);
                 // fetch quality gate...
-                core.info('Quality gate api call');
-                var qualityGateUrl = `/api/qualitygates/project_status?analysisId=${analysisId}`;
-                core.info('Quality gate url:' + qualityGateUrl);
+                core.info('Fetching Quality Gate');
                 new Request_1.default()
-                    .get(codeScanUrl, authToken, qualityGateUrl, false)
+                    .get(codeScanUrl, authToken, `/api/qualitygates/project_status?analysisId=${analysisId}`, false)
                     .then(data => {
                     const json = JSON.parse(data);
                     core.info('Quality Gate status');
