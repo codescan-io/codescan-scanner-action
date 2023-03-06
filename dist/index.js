@@ -439,6 +439,7 @@ function run() {
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             const generateReportFile = core.getInput('generateReportFile') === 'true';
             const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true';
+            const pullrequestKey = core.getInput('sonar.pullrequest.key');
             if (generateSarifFile) {
                 Object.assign(options, {
                     'sonar.analysis.report.enabled': 'true',
@@ -481,8 +482,12 @@ function run() {
                 const key = core.getInput('projectKey');
                 // fetch quality gate...
                 core.info('Quality gate api call');
+                var qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}`;
+                if (pullrequestKey) {
+                    qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}&${pullrequestKey}`;
+                }
                 new Request_1.default()
-                    .get(codeScanUrl, authToken, `/api/qualitygates/project_status?projectKey=${key}`, false)
+                    .get(codeScanUrl, authToken, qualityGateUrl, false)
                     .then(data => {
                     const json = JSON.parse(data);
                     core.info('Quality Gate status');

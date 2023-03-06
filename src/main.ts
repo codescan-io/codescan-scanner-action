@@ -31,6 +31,7 @@ async function run(): Promise<void> {
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
     const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true'
+    const pullrequestKey = core.getInput('sonar.pullrequest.key')
 
     if (generateSarifFile) {
       Object.assign(options, {
@@ -99,11 +100,15 @@ async function run(): Promise<void> {
       
       // fetch quality gate...
       core.info('Quality gate api call')
+      var qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}`
+      if (pullrequestKey) {
+        qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}&${pullrequestKey}`
+      }
       new Request()
           .get(
             codeScanUrl,
             authToken,
-            `/api/qualitygates/project_status?projectKey=${key}`,
+            qualityGateUrl,
             false
           )
           .then(data => {
