@@ -441,6 +441,7 @@ function run() {
             const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10);
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             const generateReportFile = core.getInput('generateReportFile') === 'true';
+            const failPipeWhenRedQualityGate = true;
             if (generateSarifFile) {
                 Object.assign(options, {
                     'sonar.analysis.report.enabled': 'true',
@@ -486,6 +487,54 @@ function run() {
             }
             else {
                 core.debug('[CS] Generation of SARIF file is disabled.');
+            }
+            if (failPipeWhenRedQualityGate) {
+                // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
+                const key = core.getInput('projectKey');
+                const gateurl = `${codeScanUrl}api/qualitygates/project_status?projectKey=${key}`;
+                core.info('Quality gate url: ${gateurl}');
+                core.info(gateurl);
+                if (!gateurl) {
+                    Promise.reject('qualityGate url not found');
+                }
+                else {
+                    // fetch quality gate...
+                    core.info('Quality gate api call');
+                    new Request_1.default()
+                        .get(codeScanUrl, authToken, `/api/qualitygates/project_status?projectKey=${key}`, false)
+                        .then(data => {
+                        core.info('----project status--');
+                        core.info(data.projectStatus.status);
+                    });
+                    /* request({url: gateurl, authToken}, (error: any, response: any, body: string) => {
+                      core.info('----error--')
+                      core.info(error);
+                      core.info('------')
+                      core.info('----body--')
+                      core.info(body);
+                      core.info('------')
+                      core.info('----response--')
+                      core.info(response);
+                      core.info('------')
+                      core.info('----response status--')
+                      core.info(response.Status);
+                      core.info('------')
+    
+                      if (error) {
+                        return Promise.reject(error);
+                      }
+                      core.info(body)
+                      const json = JSON.parse(body);
+                      console.log(json);
+                      console.log(json.projectStatus.status);
+                      if (json.errors) {
+                        Promise.reject(json.errors[0].msg);
+                      } else if (json.projectStatus.status === 'ERROR') {
+                        Promise.reject("Pipeline failed with red quality gate");
+                      }
+                      Promise.resolve(json.projectStatus);
+                    }); */
+                }
             }
         }
         catch (error) {
