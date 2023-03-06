@@ -483,8 +483,10 @@ function run() {
                 // fetch quality gate...
                 core.info('Quality gate api call');
                 var qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}`;
+                core.info('Quality gate url:' + qualityGateUrl);
                 if (pullrequestKey) {
-                    qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}&${pullrequestKey}`;
+                    qualityGateUrl = `/api/qualitygates/project_status?projectKey=${key}&pullRequest=${pullrequestKey}`;
+                    core.info('Quality gate url for PR:' + qualityGateUrl);
                 }
                 new Request_1.default()
                     .get(codeScanUrl, authToken, qualityGateUrl, false)
