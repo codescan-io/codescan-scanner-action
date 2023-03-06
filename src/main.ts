@@ -30,7 +30,7 @@ async function run(): Promise<void> {
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
-    const failPipeWhenRedQualityGate = true
+    const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true'
 
     if (generateSarifFile) {
       Object.assign(options, {
@@ -65,15 +65,6 @@ async function run(): Promise<void> {
     )
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
-    tasks.forEach (task => {
-        core.info("Executing task for quality gate analysis")
-        core.info(task.status)
-        if (task.status !== "SUCCESS") {
-            core.info("Quality gate failed")
-            core.setFailed("Failed Quality Gate")
-        }
-    })
-
     if (generateSarifFile) {
       // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
       await Promise.all(
@@ -102,70 +93,34 @@ async function run(): Promise<void> {
     } else {
       core.debug('[CS] Generation of SARIF file is disabled.')
     }
-  if (failPipeWhenRedQualityGate) {
-        // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
+    if (failPipeWhenRedQualityGate) {
 
-            const key = core.getInput('projectKey')
-            const gateurl=`${codeScanUrl}api/qualitygates/project_status?projectKey=${key}`
-            core.info('Quality gate url: ${gateurl}')
-            core.info(gateurl)
-            if (!gateurl) {
-              Promise.reject('qualityGate url not found');
-            } else {
-                // fetch quality gate...
-                core.info('Quality gate api call')
-                new Request()
-                    .get(
-                      codeScanUrl,
-                      authToken,
-                      `/api/qualitygates/project_status?projectKey=${key}`,
-                      false
-                    )
-                    .then(data => {
-                      const json = JSON.parse(data);
-                      core.info('----Quality Gate status--')
-                      core.info(json.projectStatus.status)
-                      if (json.errors) {
-                        core.setFailed("Failed Quality Gate")
-                      } else if (json.projectStatus.status !== 'SUCCESS') {
-                        core.setFailed("Failed Quality Gate")
-                      }
-                    })
-                /* request({url: gateurl, authToken}, (error: any, response: any, body: string) => {
-                  core.info('----error--')
-                  core.info(error);
-                  core.info('------')
-                  core.info('----body--')
-                  core.info(body);
-                  core.info('------')
-                  core.info('----response--')
-                  core.info(response);
-                  core.info('------')
-                  core.info('----response status--')
-                  core.info(response.Status);
-                  core.info('------')
-
-                  if (error) {
-                    return Promise.reject(error);
-                  }
-                  core.info(body)
-                  const json = JSON.parse(body);
-                  console.log(json);
-                  console.log(json.projectStatus.status);
-                  if (json.errors) {
-                    Promise.reject(json.errors[0].msg);
-                  } else if (json.projectStatus.status === 'ERROR') {
-                    Promise.reject("Pipeline failed with red quality gate");
-                  }
-                  Promise.resolve(json.projectStatus);
-                }); */
+      const key = core.getInput('projectKey')
+      
+      // fetch quality gate...
+      core.info('Quality gate api call')
+      new Request()
+          .get(
+            codeScanUrl,
+            authToken,
+            `/api/qualitygates/project_status?projectKey=${key}`,
+            false
+          )
+          .then(data => {
+            const json = JSON.parse(data);
+            core.info('Quality Gate status')
+            core.info(json.projectStatus.status)
+            if (json.errors) {
+              core.setFailed("Failed Quality Gate")
+            } else if (json.projectStatus.status !== 'OK') {
+              core.setFailed("Failed Quality Gate")
             }
-
-      }
-
-    } catch (error: any) {
-      core.setFailed(error.message)
+          })
     }
-  }
 
-  run()
+  } catch (error: any) {
+     core.setFailed(error.message)
+  }
+}
+
+run()
