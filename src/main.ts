@@ -24,14 +24,14 @@ async function run(): Promise<void> {
       'sonar.organization': core.getInput('organization'),
       'sonar.projectKey': core.getInput('projectKey')
     }
-
+    
     const codeScanUrl = core.getInput('codeScanUrl')
     const authToken = core.getInput('login')
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
     const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true'
-    const pullrequestKey = core.getInput('sonar.pullrequest.key')
+    const pullrequestKey = args[2]
 
     if (generateSarifFile) {
       Object.assign(options, {

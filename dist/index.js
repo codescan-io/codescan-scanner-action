@@ -439,7 +439,7 @@ function run() {
             const generateSarifFile = core.getInput('generateSarifFile') === 'true';
             const generateReportFile = core.getInput('generateReportFile') === 'true';
             const failPipeWhenRedQualityGate = core.getInput('failPipeWhenRedQualityGate') === 'true';
-            const pullrequestKey = core.getInput('sonar.pullrequest.key');
+            const pullrequestKey = args[2];
             if (generateSarifFile) {
                 Object.assign(options, {
                     'sonar.analysis.report.enabled': 'true',
