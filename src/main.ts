@@ -116,7 +116,7 @@ async function run(): Promise<void> {
           )
           .then(data => {
             const json = JSON.parse(data);
-            core.info('Quality Gate status'+json.projectStatus.status)
+            core.info('Quality Gate status: '+json.projectStatus.status)
             if (json.errors) {
               core.setFailed("Failed Quality Gate")
             } else if (json.projectStatus.status !== 'OK') {

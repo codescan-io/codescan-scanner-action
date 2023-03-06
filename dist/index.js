@@ -490,7 +490,7 @@ function run() {
                     .get(codeScanUrl, authToken, `/api/qualitygates/project_status?analysisId=${analysisId}`, false)
                     .then(data => {
                     const json = JSON.parse(data);
-                    core.info('Quality Gate status' + json.projectStatus.status);
+                    core.info('Quality Gate status: ' + json.projectStatus.status);
                     if (json.errors) {
                         core.setFailed("Failed Quality Gate");
                     }
