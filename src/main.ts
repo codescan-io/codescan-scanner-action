@@ -107,7 +107,7 @@ async function run(): Promise<void> {
           )
           .then(data => {
             const json = JSON.parse(data);
-            core.debug('Quality Gate status: ' + json.projectStatus.status)
+            core.debug(`Quality Gate status: ${json.projectStatus.status}`)
             if (json.errors || json.projectStatus.status !== 'OK') {
               core.setFailed("Failed Quality Gate")
             }
