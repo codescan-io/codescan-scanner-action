@@ -504,7 +504,8 @@ function run() {
                         .get(codeScanUrl, authToken, `/api/qualitygates/project_status?projectKey=${key}`, false)
                         .then(data => {
                         core.info('----project status--');
-                        core.info(data.projectStatus.status);
+                        const json = JSON.parse(data);
+                        core.info(json.projectStatus.status);
                     });
                     /* request({url: gateurl, authToken}, (error: any, response: any, body: string) => {
                       core.info('----error--')
