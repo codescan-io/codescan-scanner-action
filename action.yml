@@ -22,6 +22,10 @@ inputs:
     required: false
     description: 'This task will poll CodeScanCloud until the analysis is completed, or until the timeout is reached'
     default: '900'
+  scanChangedFilesOnly:
+    required: false
+    description: 'The flag to indicate that PR scans should only analyze added, changed or modified files in the PR'
+    default: 'false'
   generateSarifFile:
     required: false
     description: 'The flag to indicate that SARIF file should be generated on server side'
