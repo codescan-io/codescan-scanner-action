@@ -54,7 +54,8 @@ async function run(): Promise<void> {
 
         // Fetch till PR start
         const commits = prPayload.pull_request.commits
-        await exec.exec('git', ['fetch', `--depth=${commits}`]);
+        const branch = prPayload.pull_request.head.ref
+        await exec.exec('git', ['fetch', 'origin', `${branch}`, `--depth=${commits + 1}`]);
 
         // Get filenames with diff
         const {stdout} = await exec.getExecOutput('git', ['diff', '--name-only', prPayload.pull_request.head.sha, prPayload.pull_request.base.sha]);
