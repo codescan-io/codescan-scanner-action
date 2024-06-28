@@ -12,6 +12,7 @@ Run CodeScan static code analysis jobs from Github workflow. The CodeScan action
 | login | **required** | Security authentication key for the user having scan access for the project |
 | codeScanUrl | https://app.codescan.io/ | CodeScanCloud endpoint for your project |
 | pollingTimeoutSec | 900 | Timeout to wait for Post-Analysis report generation is completed (in seconds) |
+| scanChangedFilesOnly | true | The flag to indicate that PR scans should only analyze added, changed or modified files in the PR. |
 | generateReportFile | true | The flag to indicate that SARIF file should be generated on client side. |
 | generateSarifFile | false | The flag to indicate that SARIF file should be generated on server side. |
 | failOnRedQualityGate | false | The flag to indicate that pipeline will fail in case of quality gate status failed. |
