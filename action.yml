@@ -42,5 +42,5 @@ inputs:
     required: false
     description: 'Additional arguments to the sonarcloud scanner'
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'dist/index.js'

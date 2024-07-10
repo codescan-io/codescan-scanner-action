@@ -482,9 +482,19 @@ function run() {
                     // Fetch till PR start
                     const commits = prPayload.pull_request.commits;
                     const branch = prPayload.pull_request.head.ref;
-                    yield exec.exec('git', ['fetch', 'origin', `${branch}`, `--depth=${commits + 1}`]);
+                    yield exec.exec('git', [
+                        'fetch',
+                        'origin',
+                        `${branch}`,
+                        `--depth=${commits + 1}`
+                    ]);
                     // Get filenames with diff
-                    const { stdout } = yield exec.getExecOutput('git', ['diff', '--name-only', prPayload.pull_request.head.sha, prPayload.pull_request.base.sha]);
+                    const { stdout } = yield exec.getExecOutput('git', [
+                        'diff',
+                        '--name-only',
+                        prPayload.pull_request.head.sha,
+                        prPayload.pull_request.base.sha
+                    ]);
                     // Add to inclusions
                     const files = stdout.split(/\r?\n/);
                     Object.assign(options, {
@@ -527,7 +537,7 @@ function run() {
                     const json = JSON.parse(data);
                     core.debug(`Quality Gate status: ${json.projectStatus.status}`);
                     if (json.errors || json.projectStatus.status !== 'OK') {
-                        core.setFailed("Failed Quality Gate");
+                        core.setFailed('Failed Quality Gate');
                     }
                 });
             }

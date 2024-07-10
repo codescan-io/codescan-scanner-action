@@ -33,8 +33,10 @@ async function run(): Promise<void> {
     const timeoutSec = Number.parseInt(core.getInput('pollingTimeoutSec'), 10)
     const generateSarifFile = core.getInput('generateSarifFile') === 'true'
     const generateReportFile = core.getInput('generateReportFile') === 'true'
-    const failOnRedQualityGate = core.getInput('failOnRedQualityGate') === 'true'
-    const scanChangedFilesOnly = core.getInput('scanChangedFilesOnly') === 'true'
+    const failOnRedQualityGate =
+      core.getInput('failOnRedQualityGate') === 'true'
+    const scanChangedFilesOnly =
+      core.getInput('scanChangedFilesOnly') === 'true'
 
     if (generateSarifFile) {
       Object.assign(options, {
@@ -49,21 +51,31 @@ async function run(): Promise<void> {
     }
 
     if (scanChangedFilesOnly) {
-      if (github.context.eventName === 'pull_request') {      
+      if (github.context.eventName === 'pull_request') {
         const prPayload = github.context.payload as PullRequestEvent
 
         // Fetch till PR start
         const commits = prPayload.pull_request.commits
         const branch = prPayload.pull_request.head.ref
-        await exec.exec('git', ['fetch', 'origin', `${branch}`, `--depth=${commits + 1}`]);
+        await exec.exec('git', [
+          'fetch',
+          'origin',
+          `${branch}`,
+          `--depth=${commits + 1}`
+        ])
 
         // Get filenames with diff
-        const {stdout} = await exec.getExecOutput('git', ['diff', '--name-only', prPayload.pull_request.head.sha, prPayload.pull_request.base.sha]);
+        const {stdout} = await exec.getExecOutput('git', [
+          'diff',
+          '--name-only',
+          prPayload.pull_request.head.sha,
+          prPayload.pull_request.base.sha
+        ])
 
         // Add to inclusions
-        const files = stdout.split(/\r?\n/);
+        const files = stdout.split(/\r?\n/)
         Object.assign(options, {
-          'sonar.inclusions': files.join(',')   
+          'sonar.inclusions': files.join(',')
         })
       }
     }
@@ -118,28 +130,26 @@ async function run(): Promise<void> {
       core.debug('[CS] Generation of SARIF file is disabled.')
     }
 
-    
     if (failOnRedQualityGate) {
       core.debug('Fetching Quality Gate results')
-      const analysisId = tasks[0].analysisId;
+      const analysisId = tasks[0].analysisId
       new Request()
-          .get(
-            codeScanUrl,
-            authToken,
-            `/api/qualitygates/project_status?analysisId=${analysisId}`,
-            false
-          )
-          .then(data => {
-            const json = JSON.parse(data);
-            core.debug(`Quality Gate status: ${json.projectStatus.status}`)
-            if (json.errors || json.projectStatus.status !== 'OK') {
-              core.setFailed("Failed Quality Gate")
-            }
-          })
+        .get(
+          codeScanUrl,
+          authToken,
+          `/api/qualitygates/project_status?analysisId=${analysisId}`,
+          false
+        )
+        .then(data => {
+          const json = JSON.parse(data)
+          core.debug(`Quality Gate status: ${json.projectStatus.status}`)
+          if (json.errors || json.projectStatus.status !== 'OK') {
+            core.setFailed('Failed Quality Gate')
+          }
+        })
     }
-
   } catch (error: any) {
-     core.setFailed(error.message)
+    core.setFailed(error.message)
   }
 }
 
