@@ -71,10 +71,9 @@ export default class Task {
                     codeScanUrl,
                     authToken,
                     taskId,
-                    tries,
+                    tries - 1,
                     delay
                   ).then(resolve, reject)
-                  tries--
                 }, delay)
               )
           }

@@ -221,8 +221,7 @@ class Task {
                         return new Task(task);
                     default:
                         return new Promise((resolve, reject) => setTimeout(() => {
-                            Task.waitForTaskCompletion(codeScanUrl, authToken, taskId, tries, delay).then(resolve, reject);
-                            tries--;
+                            Task.waitForTaskCompletion(codeScanUrl, authToken, taskId, tries - 1, delay).then(resolve, reject);
                         }, delay));
                 }
             }, (err) => {
