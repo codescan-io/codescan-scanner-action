@@ -7,6 +7,14 @@
       "sourceType": "module",
       "project": "./tsconfig.json"
     },
+    "overrides": [
+      {
+        "files": ["**/*.test.ts"],
+        "parserOptions": {
+          "project": null
+        }
+      }
+    ],
     "rules": {
       "github/no-then": "off",
       "eslint-comments/no-use": "off",

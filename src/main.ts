@@ -5,7 +5,6 @@ import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 import {PullRequestEvent} from '@octokit/webhooks-types'
 import Request from './Request'
-import * as fs from 'fs'
 import {
   writeSarifFiles,
   GITHUB_MAX_RESULTS_PER_RUN,
