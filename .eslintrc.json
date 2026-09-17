@@ -5,16 +5,8 @@
     "parserOptions": {
       "ecmaVersion": 9,
       "sourceType": "module",
-      "project": "./tsconfig.eslint.json"
+      "project": "./tsconfig.json"
     },
-    "overrides": [
-      {
-        "files": ["jest.config.js"],
-        "parserOptions": {
-          "project": null
-        }
-      }
-    ],
     "rules": {
       "github/no-then": "off",
       "eslint-comments/no-use": "off",
