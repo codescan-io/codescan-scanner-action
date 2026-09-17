@@ -20,9 +20,7 @@ export function writeSarifFiles(
   outputFile: string,
   maxResultsPerRun: number
 ): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sarif: any = JSON.parse(data)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const runs: any[] = sarif.runs || []
 
   if (
@@ -30,18 +28,20 @@ export function writeSarifFiles(
     runs[0].results &&
     runs[0].results.length > maxResultsPerRun
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allResults: any[] = runs[0].results
     const totalChunks = Math.ceil(allResults.length / maxResultsPerRun)
     core.debug(
       `[CS] SARIF contains ${allResults.length} results — splitting into ${totalChunks} runs of up to ${maxResultsPerRun} results each`
     )
 
-    const splitRuns = []
+    const splitRuns: any[] = []
     for (let i = 0; i < totalChunks; i++) {
       splitRuns.push({
         ...runs[0],
-        results: allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun)
+        results: allResults.slice(
+          i * maxResultsPerRun,
+          (i + 1) * maxResultsPerRun
+        )
       })
     }
 

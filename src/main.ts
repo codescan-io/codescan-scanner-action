@@ -121,7 +121,11 @@ async function run(): Promise<void> {
               }
             )
             .then(data => {
-              writeSarifFiles(data, SARIF_OUTPUT_FILE, GITHUB_MAX_RESULTS_PER_RUN)
+              writeSarifFiles(
+                data,
+                SARIF_OUTPUT_FILE,
+                GITHUB_MAX_RESULTS_PER_RUN
+              )
             })
         })
       )

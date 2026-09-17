@@ -595,14 +595,11 @@ exports.SARIF_OUTPUT_FILE = 'codescan.sarif';
  *   the GitHub Code Scanning "multiple uploads with the same category" rejection.
  */
 function writeSarifFiles(data, outputFile, maxResultsPerRun) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sarif = JSON.parse(data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const runs = sarif.runs || [];
     if (runs.length > 0 &&
         runs[0].results &&
         runs[0].results.length > maxResultsPerRun) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const allResults = runs[0].results;
         const totalChunks = Math.ceil(allResults.length / maxResultsPerRun);
         core.debug(`[CS] SARIF contains ${allResults.length} results — splitting into ${totalChunks} runs of up to ${maxResultsPerRun} results each`);

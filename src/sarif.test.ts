@@ -1,8 +1,11 @@
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import * as core from '@actions/core'
-import {writeSarifFiles, GITHUB_MAX_RESULTS_PER_RUN, SARIF_OUTPUT_FILE} from './sarif'
+import {
+  writeSarifFiles,
+  GITHUB_MAX_RESULTS_PER_RUN,
+  SARIF_OUTPUT_FILE
+} from './sarif'
 
 jest.mock('@actions/core')
 
@@ -10,11 +13,11 @@ jest.mock('@actions/core')
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeResult(id: number) {
+function makeResult(id: number): object {
   return {ruleId: `rule-${id}`, message: {text: `msg ${id}`}}
 }
 
-function makeSarif(resultCount: number) {
+function makeSarif(resultCount: number): object {
   const results = Array.from({length: resultCount}, (_, i) => makeResult(i))
   return {
     $schema: 'https://example.com/sarif-schema-2.1.0.json',
@@ -28,7 +31,7 @@ function makeSarif(resultCount: number) {
   }
 }
 
-function readSarif(filePath: string) {
+function readSarif(filePath: string): any {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
 }
 
