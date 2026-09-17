@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import * as core from '@actions/core'
-import {writeSarifFiles, GITHUB_MAX_RESULTS_PER_RUN} from './sarif'
+import {writeSarifFiles, GITHUB_MAX_RESULTS_PER_RUN, SARIF_OUTPUT_FILE} from './sarif'
 
 jest.mock('@actions/core')
 
@@ -14,7 +14,7 @@ function makeResult(id: number) {
   return {ruleId: `rule-${id}`, message: {text: `msg ${id}`}}
 }
 
-function makeSarif(resultCount: number, extra: object = {}) {
+function makeSarif(resultCount: number) {
   const results = Array.from({length: resultCount}, (_, i) => makeResult(i))
   return {
     $schema: 'https://example.com/sarif-schema-2.1.0.json',
@@ -22,8 +22,7 @@ function makeSarif(resultCount: number, extra: object = {}) {
     runs: [
       {
         tool: {driver: {name: 'CodeScan', rules: [{id: 'rule-0'}]}},
-        results,
-        ...extra
+        results
       }
     ]
   }
@@ -38,214 +37,171 @@ function readSarif(filePath: string) {
 // ---------------------------------------------------------------------------
 
 describe('writeSarifFiles', () => {
-  let tmpDir: string
+  let tmpFile: string
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sarif-test-'))
+    tmpFile = path.join(os.tmpdir(), `sarif-test-${Date.now()}.sarif`)
   })
 
   afterEach(() => {
-    fs.rmSync(tmpDir, {recursive: true, force: true})
+    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile)
     jest.clearAllMocks()
   })
 
   // ── within-limit paths ───────────────────────────────────────────────────
 
-  it('writes a single codescan.sarif when results are below the limit', () => {
+  it('SARIF_OUTPUT_FILE constant equals codescan.sarif', () => {
+    expect(SARIF_OUTPUT_FILE).toBe('codescan.sarif')
+  })
+
+  it('writes a single run when results are below the limit', () => {
     const data = JSON.stringify(makeSarif(100))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
-
-    const written = readSarif(path.join(tmpDir, 'codescan.sarif'))
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(1)
     expect(written.runs[0].results).toHaveLength(100)
   })
 
   it('writes raw bytes unchanged (no re-serialisation) when within limit', () => {
-    // Deliberately include whitespace that JSON.stringify would strip out
-    const sarif = makeSarif(10)
-    const data = JSON.stringify(sarif, null, 2)
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    const data = JSON.stringify(makeSarif(10), null, 2)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const rawOnDisk = fs.readFileSync(
-      path.join(tmpDir, 'codescan.sarif'),
-      'utf-8'
-    )
+    const rawOnDisk = fs.readFileSync(tmpFile, 'utf-8')
     expect(rawOnDisk).toBe(data)
   })
 
-  it('writes a single codescan.sarif when results equal the limit exactly', () => {
+  it('writes a single run when results equal the limit exactly', () => {
     const data = JSON.stringify(makeSarif(GITHUB_MAX_RESULTS_PER_RUN))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(1)
   })
 
-  it('writes a single codescan.sarif when results array is empty', () => {
+  it('writes a single run when results array is empty', () => {
     const data = JSON.stringify(makeSarif(0))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(1)
   })
 
-  it('writes a single codescan.sarif when runs array is empty', () => {
+  it('writes the file when runs array is empty', () => {
     const data = JSON.stringify({$schema: 'x', version: '2.1.0', runs: []})
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
+    expect(fs.existsSync(tmpFile)).toBe(true)
   })
 
-  it('writes a single codescan.sarif when runs key is absent', () => {
+  it('writes the file when runs key is absent', () => {
     const data = JSON.stringify({$schema: 'x', version: '2.1.0'})
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
+    expect(fs.existsSync(tmpFile)).toBe(true)
   })
 
-  it('writes a single codescan.sarif when results key is absent on run', () => {
+  it('writes the file when results key is absent on run', () => {
     const data = JSON.stringify({
       $schema: 'x',
       version: '2.1.0',
       runs: [{tool: {driver: {name: 'CodeScan', rules: []}}}]
     })
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir)
-    expect(files).toEqual(['codescan.sarif'])
+    expect(fs.existsSync(tmpFile)).toBe(true)
   })
 
-  // ── splitting paths ──────────────────────────────────────────────────────
+  // ── splitting paths — always one file, multiple runs ─────────────────────
 
-  it('splits into two files when results is one over the limit', () => {
+  it('splits into two runs when results is one over the limit', () => {
     const total = GITHUB_MAX_RESULTS_PER_RUN + 1
     const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir).sort()
-    expect(files).toEqual(['codescan-001.sarif', 'codescan-002.sarif'])
-
-    const chunk1 = readSarif(path.join(tmpDir, 'codescan-001.sarif'))
-    const chunk2 = readSarif(path.join(tmpDir, 'codescan-002.sarif'))
-    expect(chunk1.runs[0].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
-    expect(chunk2.runs[0].results).toHaveLength(1)
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(2)
+    expect(written.runs[0].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
+    expect(written.runs[1].results).toHaveLength(1)
   })
 
   it('splits evenly when results is exactly 2× the limit', () => {
     const total = GITHUB_MAX_RESULTS_PER_RUN * 2
     const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir).sort()
-    expect(files).toEqual(['codescan-001.sarif', 'codescan-002.sarif'])
-
-    const chunk1 = readSarif(path.join(tmpDir, 'codescan-001.sarif'))
-    const chunk2 = readSarif(path.join(tmpDir, 'codescan-002.sarif'))
-    expect(chunk1.runs[0].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
-    expect(chunk2.runs[0].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(2)
+    expect(written.runs[0].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
+    expect(written.runs[1].results).toHaveLength(GITHUB_MAX_RESULTS_PER_RUN)
   })
 
-  it('produces correct number of chunk files for a large result set', () => {
-    // 249,780 results → ceil(249780/25000) = 10 files
+  it('produces correct number of runs for a large result set', () => {
+    // 249,780 results → ceil(249780/25000) = 10 runs
     const total = 249780
     const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir).sort()
-    expect(files).toHaveLength(10)
-    expect(files[0]).toBe('codescan-001.sarif')
-    expect(files[9]).toBe('codescan-010.sarif')
+    const written = readSarif(tmpFile)
+    expect(written.runs).toHaveLength(10)
 
-    // All results accounted for
-    const totalWritten = files.reduce((sum, f) => {
-      const sarif = readSarif(path.join(tmpDir, f))
-      return sum + sarif.runs[0].results.length
-    }, 0)
+    const totalWritten = written.runs.reduce(
+      (sum: number, r: any) => sum + r.results.length,
+      0
+    )
     expect(totalWritten).toBe(total)
   })
 
-  it('no chunk exceeds the limit', () => {
-    const total = 62500 // 3 chunks: 25000 + 25000 + 12500
-    const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+  it('no run exceeds the limit', () => {
+    const data = JSON.stringify(makeSarif(62500))
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const files = fs.readdirSync(tmpDir).sort()
-    for (const f of files) {
-      const sarif = readSarif(path.join(tmpDir, f))
-      expect(sarif.runs[0].results.length).toBeLessThanOrEqual(
-        GITHUB_MAX_RESULTS_PER_RUN
-      )
+    const written = readSarif(tmpFile)
+    for (const run of written.runs) {
+      expect(run.results.length).toBeLessThanOrEqual(GITHUB_MAX_RESULTS_PER_RUN)
     }
   })
 
-  it('preserves result order across chunks', () => {
+  it('preserves result order across runs', () => {
     const total = GITHUB_MAX_RESULTS_PER_RUN + 5
     const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    const chunk1 = readSarif(path.join(tmpDir, 'codescan-001.sarif'))
-    const chunk2 = readSarif(path.join(tmpDir, 'codescan-002.sarif'))
-
-    // Last result of chunk1 should be rule-(25000-1), first of chunk2 rule-25000
-    expect(chunk1.runs[0].results[GITHUB_MAX_RESULTS_PER_RUN - 1].ruleId).toBe(
+    const written = readSarif(tmpFile)
+    expect(written.runs[0].results[GITHUB_MAX_RESULTS_PER_RUN - 1].ruleId).toBe(
       `rule-${GITHUB_MAX_RESULTS_PER_RUN - 1}`
     )
-    expect(chunk2.runs[0].results[0].ruleId).toBe(
+    expect(written.runs[1].results[0].ruleId).toBe(
       `rule-${GITHUB_MAX_RESULTS_PER_RUN}`
     )
   })
 
   // ── metadata preservation ────────────────────────────────────────────────
 
-  it('copies $schema and version into every chunk file', () => {
-    const total = GITHUB_MAX_RESULTS_PER_RUN + 1
-    const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
+  it('copies $schema and version into the output file', () => {
+    const data = JSON.stringify(makeSarif(GITHUB_MAX_RESULTS_PER_RUN + 1))
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
 
-    for (const f of fs.readdirSync(tmpDir)) {
-      const sarif = readSarif(path.join(tmpDir, f))
-      expect(sarif.$schema).toBe('https://example.com/sarif-schema-2.1.0.json')
-      expect(sarif.version).toBe('2.1.0')
+    const written = readSarif(tmpFile)
+    expect(written.$schema).toBe('https://example.com/sarif-schema-2.1.0.json')
+    expect(written.version).toBe('2.1.0')
+  })
+
+  it('copies tool.driver.rules into every run', () => {
+    const data = JSON.stringify(makeSarif(GITHUB_MAX_RESULTS_PER_RUN + 1))
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
+
+    const written = readSarif(tmpFile)
+    for (const run of written.runs) {
+      expect(run.tool.driver.rules).toEqual([{id: 'rule-0'}])
     }
-  })
-
-  it('copies tool.driver.rules into every chunk file', () => {
-    const total = GITHUB_MAX_RESULTS_PER_RUN + 1
-    const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
-
-    for (const f of fs.readdirSync(tmpDir)) {
-      const sarif = readSarif(path.join(tmpDir, f))
-      expect(sarif.runs[0].tool.driver.rules).toEqual([{id: 'rule-0'}])
-    }
-  })
-
-  // ── logging ──────────────────────────────────────────────────────────────
-
-  it('calls core.info with split count when splitting', () => {
-    const total = GITHUB_MAX_RESULTS_PER_RUN + 1
-    const data = JSON.stringify(makeSarif(total))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
-
-    expect(core.info).toHaveBeenCalledWith(
-      expect.stringContaining('splitting into 2 file(s)')
-    )
-  })
-
-  it('does not call core.info when within limit', () => {
-    const data = JSON.stringify(makeSarif(100))
-    writeSarifFiles(data, tmpDir, GITHUB_MAX_RESULTS_PER_RUN)
-
-    expect(core.info).not.toHaveBeenCalled()
   })
 
   // ── error handling ───────────────────────────────────────────────────────
 
   it('throws on invalid JSON input', () => {
-    expect(() => writeSarifFiles('not-json', tmpDir, GITHUB_MAX_RESULTS_PER_RUN)).toThrow()
+    expect(() =>
+      writeSarifFiles('not-json', tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
+    ).toThrow()
   })
 })

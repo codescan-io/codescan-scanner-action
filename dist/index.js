@@ -440,7 +440,6 @@ const github = __importStar(__nccwpck_require__(95438));
 const Scanner_1 = __nccwpck_require__(9660);
 const TaskReport_1 = __importStar(__nccwpck_require__(91592));
 const Request_1 = __importDefault(__nccwpck_require__(47457));
-const fs = __importStar(__nccwpck_require__(57147));
 const sarif_1 = __nccwpck_require__(70929);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -511,7 +510,6 @@ function run() {
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
             if (generateSarifFile) {
-                fs.mkdirSync(sarif_1.SARIF_OUTPUT_DIR, { recursive: true });
                 yield Promise.all(tasks.map(task => {
                     core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
                     return new Request_1.default()
@@ -520,7 +518,7 @@ function run() {
                         projectKey: core.getInput('projectKey')
                     })
                         .then(data => {
-                        (0, sarif_1.writeSarifFiles)(data, sarif_1.SARIF_OUTPUT_DIR, sarif_1.GITHUB_MAX_RESULTS_PER_RUN);
+                        (0, sarif_1.writeSarifFiles)(data, sarif_1.SARIF_OUTPUT_FILE, sarif_1.GITHUB_MAX_RESULTS_PER_RUN);
                     });
                 }));
             }
@@ -580,27 +578,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.writeSarifFiles = exports.SARIF_OUTPUT_DIR = exports.GITHUB_MAX_RESULTS_PER_RUN = void 0;
+exports.writeSarifFiles = exports.SARIF_OUTPUT_FILE = exports.GITHUB_MAX_RESULTS_PER_RUN = void 0;
 const core = __importStar(__nccwpck_require__(42186));
 const fs = __importStar(__nccwpck_require__(57147));
 exports.GITHUB_MAX_RESULTS_PER_RUN = 25000;
-exports.SARIF_OUTPUT_DIR = 'codescan-sarif';
+exports.SARIF_OUTPUT_FILE = 'codescan.sarif';
 /**
- * Parse a SARIF JSON string and write it to `outputDir`.
+ * Parse a SARIF JSON string and write a single `codescan.sarif` to `outputFile`.
  *
  * - When the first run's result count is within `maxResultsPerRun` the raw
- *   `data` string is written as-is to `<outputDir>/codescan.sarif` (no
- *   re-serialisation, preserving the original bytes).
- * - When the count exceeds the limit the results are split into sequential
- *   chunks and written as `<outputDir>/codescan-001.sarif`,
- *   `<outputDir>/codescan-002.sarif`, … Each chunk file carries the full
- *   top-level SARIF metadata (`$schema`, `version`) and the complete
- *   `tool.driver.rules` section so every file is a self-contained, valid
- *   SARIF document.
- *
- * The directory is assumed to already exist (caller's responsibility).
+ *   `data` string is written as-is (no re-serialisation, preserving original bytes).
+ * - When the count exceeds the limit the results are split into multiple SARIF
+ *   *runs* within the same file — each run holds at most `maxResultsPerRun`
+ *   results and carries the full `tool` metadata so it is a valid standalone run.
+ *   A single file with multiple runs is one upload → one category, which avoids
+ *   the GitHub Code Scanning "multiple uploads with the same category" rejection.
  */
-function writeSarifFiles(data, outputDir, maxResultsPerRun) {
+function writeSarifFiles(data, outputFile, maxResultsPerRun) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sarif = JSON.parse(data);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -611,18 +605,17 @@ function writeSarifFiles(data, outputDir, maxResultsPerRun) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const allResults = runs[0].results;
         const totalChunks = Math.ceil(allResults.length / maxResultsPerRun);
-        core.info(`[CS] SARIF contains ${allResults.length} results — splitting into ${totalChunks} file(s) of up to ${maxResultsPerRun} results`);
+        core.debug(`[CS] SARIF contains ${allResults.length} results — splitting into ${totalChunks} runs of up to ${maxResultsPerRun} results each`);
+        const splitRuns = [];
         for (let i = 0; i < totalChunks; i++) {
-            const chunkResults = allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun);
-            const chunkSarif = Object.assign(Object.assign({}, sarif), { runs: [Object.assign(Object.assign({}, runs[0]), { results: chunkResults })] });
-            const filename = `${outputDir}/codescan-${String(i + 1).padStart(3, '0')}.sarif`;
-            fs.writeFileSync(filename, JSON.stringify(chunkSarif));
-            core.debug(`[CS] Saved ${filename} with ${chunkResults.length} results`);
+            splitRuns.push(Object.assign(Object.assign({}, runs[0]), { results: allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun) }));
         }
+        fs.writeFileSync(outputFile, JSON.stringify(Object.assign(Object.assign({}, sarif), { runs: splitRuns })));
+        core.debug(`[CS] Saved codescan.sarif with ${totalChunks} runs of up to ${maxResultsPerRun} results each`);
     }
     else {
         // Within limit — write raw bytes unchanged
-        fs.writeFileSync(`${outputDir}/codescan.sarif`, data);
+        fs.writeFileSync(outputFile, data);
         core.debug('[CS] The SARIF file with CodeScan analysis results has been saved');
     }
 }

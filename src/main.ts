@@ -9,7 +9,7 @@ import * as fs from 'fs'
 import {
   writeSarifFiles,
   GITHUB_MAX_RESULTS_PER_RUN,
-  SARIF_OUTPUT_DIR
+  SARIF_OUTPUT_FILE
 } from './sarif'
 
 async function run(): Promise<void> {
@@ -107,8 +107,6 @@ async function run(): Promise<void> {
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
     if (generateSarifFile) {
-      fs.mkdirSync(SARIF_OUTPUT_DIR, {recursive: true})
-
       await Promise.all(
         tasks.map(task => {
           core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
@@ -124,7 +122,7 @@ async function run(): Promise<void> {
               }
             )
             .then(data => {
-              writeSarifFiles(data, SARIF_OUTPUT_DIR, GITHUB_MAX_RESULTS_PER_RUN)
+              writeSarifFiles(data, SARIF_OUTPUT_FILE, GITHUB_MAX_RESULTS_PER_RUN)
             })
         })
       )
