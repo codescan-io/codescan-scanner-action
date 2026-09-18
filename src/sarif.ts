@@ -38,6 +38,12 @@ export function writeSarifFiles(
     for (let i = 0; i < totalChunks; i++) {
       splitRuns.push({
         ...runs[0],
+        // GitHub's CodeQL action validates uniqueness using the full
+        // runAutomationDetails.id string. Each run must have a distinct id so
+        // areAllRunsUnique() passes (July 2025 policy). Using "codescan/chunk-N"
+        // keeps a shared "codescan" category prefix for UI grouping while giving
+        // each run a unique id.
+        runAutomationDetails: {id: `codescan/chunk-${i + 1}`},
         results: allResults.slice(
           i * maxResultsPerRun,
           (i + 1) * maxResultsPerRun

@@ -200,6 +200,23 @@ describe('writeSarifFiles', () => {
     }
   })
 
+  it('assigns unique runAutomationDetails.id to each split run', () => {
+    const data = JSON.stringify(makeSarif(GITHUB_MAX_RESULTS_PER_RUN + 1))
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
+
+    const written = readSarif(tmpFile)
+    expect(written.runs[0].runAutomationDetails.id).toBe('codescan/chunk-1')
+    expect(written.runs[1].runAutomationDetails.id).toBe('codescan/chunk-2')
+  })
+
+  it('does not add runAutomationDetails when within limit', () => {
+    const data = JSON.stringify(makeSarif(100))
+    writeSarifFiles(data, tmpFile, GITHUB_MAX_RESULTS_PER_RUN)
+
+    const written = readSarif(tmpFile)
+    expect(written.runs[0].runAutomationDetails).toBeUndefined()
+  })
+
   // ── error handling ───────────────────────────────────────────────────────
 
   it('throws on invalid JSON input', () => {
