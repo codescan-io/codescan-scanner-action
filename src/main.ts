@@ -5,7 +5,11 @@ import {Scanner} from './Scanner'
 import TaskReport, {REPORT_TASK_NAME} from './TaskReport'
 import {PullRequestEvent} from '@octokit/webhooks-types'
 import Request from './Request'
-import * as fs from 'fs'
+import {
+  writeSarifFiles,
+  GITHUB_MAX_RESULTS_PER_RUN,
+  SARIF_OUTPUT_FILE
+} from './sarif'
 
 async function run(): Promise<void> {
   try {
@@ -102,11 +106,10 @@ async function run(): Promise<void> {
     core.debug('[CS] CodeScan Report Tasks execution completed.')
 
     if (generateSarifFile) {
-      // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
       await Promise.all(
         tasks.map(task => {
           core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`)
-          new Request()
+          return new Request()
             .get(
               codeScanUrl,
               authToken,
@@ -118,11 +121,11 @@ async function run(): Promise<void> {
               }
             )
             .then(data => {
-              fs.writeFile('codescan.sarif', data, () => {
-                core.debug(
-                  '[CS] The SARIF file with CodeScan analysis results has been saved'
-                )
-              })
+              writeSarifFiles(
+                data,
+                SARIF_OUTPUT_FILE,
+                GITHUB_MAX_RESULTS_PER_RUN
+              )
             })
         })
       )

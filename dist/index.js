@@ -440,7 +440,7 @@ const github = __importStar(__nccwpck_require__(95438));
 const Scanner_1 = __nccwpck_require__(9660);
 const TaskReport_1 = __importStar(__nccwpck_require__(91592));
 const Request_1 = __importDefault(__nccwpck_require__(47457));
-const fs = __importStar(__nccwpck_require__(57147));
+const sarif_1 = __nccwpck_require__(70929);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -510,18 +510,15 @@ function run() {
             const tasks = yield Promise.all(taskReports.map(taskReport => TaskReport_1.default.getReportForTask(taskReport, codeScanUrl, authToken, timeoutSec)));
             core.debug('[CS] CodeScan Report Tasks execution completed.');
             if (generateSarifFile) {
-                // We should always have single task, so it's enough to hardcode SERIF filename as codescan.sarif.
                 yield Promise.all(tasks.map(task => {
                     core.debug(`[CS] Downloading SARIF file for Report Task: ${task.id}`);
-                    new Request_1.default()
+                    return new Request_1.default()
                         .get(codeScanUrl, authToken, `/_codescan/analysis/reports/${task.id}`, false, {
                         format: 'sarif',
                         projectKey: core.getInput('projectKey')
                     })
                         .then(data => {
-                        fs.writeFile('codescan.sarif', data, () => {
-                            core.debug('[CS] The SARIF file with CodeScan analysis results has been saved');
-                        });
+                        (0, sarif_1.writeSarifFiles)(data, sarif_1.SARIF_OUTPUT_FILE, sarif_1.GITHUB_MAX_RESULTS_PER_RUN);
                     });
                 }));
             }
@@ -548,6 +545,84 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 70929:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.writeSarifFiles = exports.SARIF_OUTPUT_FILE = exports.GITHUB_MAX_RESULTS_PER_RUN = void 0;
+const core = __importStar(__nccwpck_require__(42186));
+const fs = __importStar(__nccwpck_require__(57147));
+exports.GITHUB_MAX_RESULTS_PER_RUN = 25000;
+exports.SARIF_OUTPUT_FILE = 'codescan.sarif';
+/**
+ * Parse a SARIF JSON string and write a single `codescan.sarif` to `outputFile`.
+ *
+ * - When the first run's result count is within `maxResultsPerRun` the raw
+ *   `data` string is written as-is (no re-serialisation, preserving original bytes).
+ * - When the count exceeds the limit the results are split into multiple SARIF
+ *   *runs* within the same file — each run holds at most `maxResultsPerRun`
+ *   results and carries the full `tool` metadata so it is a valid standalone run.
+ *   A single file with multiple runs is one upload → one category, which avoids
+ *   the GitHub Code Scanning "multiple uploads with the same category" rejection.
+ */
+function writeSarifFiles(data, outputFile, maxResultsPerRun) {
+    const sarif = JSON.parse(data);
+    const runs = sarif.runs || [];
+    if (runs.length > 0 &&
+        runs[0].results &&
+        runs[0].results.length > maxResultsPerRun) {
+        const allResults = runs[0].results;
+        const totalChunks = Math.ceil(allResults.length / maxResultsPerRun);
+        core.debug(`[CS] SARIF contains ${allResults.length} results — splitting into ${totalChunks} runs of up to ${maxResultsPerRun} results each`);
+        const splitRuns = [];
+        for (let i = 0; i < totalChunks; i++) {
+            splitRuns.push(Object.assign(Object.assign({}, runs[0]), { 
+                // GitHub's CodeQL action validates uniqueness using the full
+                // automationDetails.id string. Each run must have a distinct id so
+                // areAllRunsUnique() passes (July 2025 policy). Using "codescan/chunk-N"
+                // keeps a shared "codescan" category prefix for UI grouping while giving
+                // each run a unique id.
+                automationDetails: { id: `codescan/chunk-${i + 1}` }, results: allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun) }));
+        }
+        fs.writeFileSync(outputFile, JSON.stringify(Object.assign(Object.assign({}, sarif), { runs: splitRuns })));
+        core.debug(`[CS] Saved codescan.sarif with ${totalChunks} runs of up to ${maxResultsPerRun} results each`);
+    }
+    else {
+        // Within limit — write raw bytes unchanged
+        fs.writeFileSync(outputFile, data);
+        core.debug('[CS] The SARIF file with CodeScan analysis results has been saved');
+    }
+}
+exports.writeSarifFiles = writeSarifFiles;
 
 
 /***/ }),
