@@ -607,11 +607,11 @@ function writeSarifFiles(data, outputFile, maxResultsPerRun) {
         for (let i = 0; i < totalChunks; i++) {
             splitRuns.push(Object.assign(Object.assign({}, runs[0]), { 
                 // GitHub's CodeQL action validates uniqueness using the full
-                // runAutomationDetails.id string. Each run must have a distinct id so
+                // automationDetails.id string. Each run must have a distinct id so
                 // areAllRunsUnique() passes (July 2025 policy). Using "codescan/chunk-N"
                 // keeps a shared "codescan" category prefix for UI grouping while giving
                 // each run a unique id.
-                runAutomationDetails: { id: `codescan/chunk-${i + 1}` }, results: allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun) }));
+                automationDetails: { id: `codescan/chunk-${i + 1}` }, results: allResults.slice(i * maxResultsPerRun, (i + 1) * maxResultsPerRun) }));
         }
         fs.writeFileSync(outputFile, JSON.stringify(Object.assign(Object.assign({}, sarif), { runs: splitRuns })));
         core.debug(`[CS] Saved codescan.sarif with ${totalChunks} runs of up to ${maxResultsPerRun} results each`);
